@@ -3,3 +3,24 @@ __pycache__/
 *.pyc
 db.sqlite3
 .DS_Store
+
+# Python virtual environments
+venv312/
+.venv/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Temporary files
+*.log
+.pytest_cache/
+.mypy_cache/
+
+# Downloaded installers
+*.dmg
+*.pkg
+
+# Local editor settings
+.vscode/
