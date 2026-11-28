@@ -41,6 +41,23 @@ export default function Home() {
         ...options.headers,
       },
     });
+    if (response.status === 401 && authToken && typeof window !== "undefined") {
+      const refresh = window.localStorage.getItem("moment_refresh");
+      if (refresh && !options._retried) {
+        const refreshed = await fetch(`${API}/auth/token/refresh/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh }),
+        });
+        const refreshedData = await refreshed.json().catch(() => ({}));
+        if (refreshed.ok && refreshedData.access) {
+          window.localStorage.setItem("moment_access", refreshedData.access);
+          return request(path, { ...options, _retried: true }, refreshedData.access);
+        }
+        window.localStorage.removeItem("moment_access");
+        window.localStorage.removeItem("moment_refresh");
+      }
+    }
     const data = response.status === 204 ? null : await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data?.detail || Object.values(data || {}).flat().join(" ") || "Something went wrong.");
     return data;
@@ -84,7 +101,7 @@ export default function Home() {
         method: "POST",
         body: JSON.stringify({ username: auth.username, password: auth.password }),
       }, "");
-      window.localStorage.setItem("moment_access", data.access);
+      window.localStorage.setItem("moment_access", data.access);\n      window.localStorage.setItem("moment_refresh", data.refresh);
       setToken(data.access);
       await loadDashboard(data.access);
       setMessage(authMode === "register" ? "Your account is ready. Welcome!" : "Welcome back!");
