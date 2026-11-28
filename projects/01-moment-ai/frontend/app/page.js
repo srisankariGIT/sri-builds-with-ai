@@ -101,7 +101,8 @@ export default function Home() {
         method: "POST",
         body: JSON.stringify({ username: auth.username, password: auth.password }),
       }, "");
-      window.localStorage.setItem("moment_access", data.access);\n      window.localStorage.setItem("moment_refresh", data.refresh);
+      window.localStorage.setItem("moment_access", data.access);
+      window.localStorage.setItem("moment_refresh", data.refresh);
       setToken(data.access);
       await loadDashboard(data.access);
       setMessage(authMode === "register" ? "Your account is ready. Welcome!" : "Welcome back!");
