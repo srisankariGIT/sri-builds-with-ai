@@ -1,4 +1,6 @@
 from datetime import timedelta
+import os
+from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework.test import APITestCase
@@ -47,3 +49,14 @@ class ReminderApiTests(APITestCase):
     def test_requires_authentication(self):
         self.client.force_authenticate(user=None)
         self.assertIn(self.client.get("/api/reminders/").status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))
+
+    def test_ai_parse_requires_configuration_and_does_not_save(self):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": ""}):
+            response = self.client.post("/api/reminders/parse/", {"text": "Remind me tomorrow"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertEqual(Reminder.objects.count(), 0)
+
+    def test_ai_parse_requires_authentication(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.post("/api/reminders/parse/", {"text": "Remind me tomorrow at 9 AM"}, format="json")
+        self.assertIn(response.status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))
