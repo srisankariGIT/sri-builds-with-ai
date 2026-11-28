@@ -27,7 +27,10 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);\n  const [aiText, setAiText] = useState("");\n  const [aiBusy, setAiBusy] = useState(false);\n  const [aiQuestion, setAiQuestion] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [aiText, setAiText] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState("");
 
   async function request(path, options = {}, authToken = token) {
     const response = await fetch(`${API}${path}`, {
