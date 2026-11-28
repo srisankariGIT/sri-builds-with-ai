@@ -49,7 +49,7 @@ Open http://localhost:3000. The frontend expects the API at http://localhost:800
 - Frontend: Vercel; set the project root to `projects/01-moment-ai/frontend` and configure `NEXT_PUBLIC_API_URL` to the deployed backend API base, ending in `/api`.
 
 ## Security notes
-Never commit `.env`, API keys, database passwords or production tokens. The browser MVP currently stores the short-lived access token in localStorage; before broad production use, move authentication behind a secure HttpOnly-cookie backend-for-frontend and add refresh-token rotation/rate limiting.
+Never commit `.env`, API keys, database passwords or production tokens. The browser MVP currently stores access and refresh JWTs in localStorage (with automatic access-token refresh); before broad production use, move authentication behind a secure HttpOnly-cookie backend-for-frontend and add refresh-token rotation/rate limiting.
 
 
 See [docs/DEPLOYMENT-CHECKLIST.md](docs/DEPLOYMENT-CHECKLIST.md) for deployment steps and public smoke tests.
