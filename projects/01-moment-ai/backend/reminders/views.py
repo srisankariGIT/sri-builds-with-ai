@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework import filters, generics, status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -46,6 +47,8 @@ class ReminderDetailView(generics.RetrieveUpdateDestroyAPIView):
 class ParseReminderView(APIView):
     """Turn a natural-language request into a draft; never save it automatically."""
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "ai_parse"
 
     def post(self, request):
         text = request.data.get("text", "")
