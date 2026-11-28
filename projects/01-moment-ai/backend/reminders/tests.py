@@ -1,6 +1,7 @@
 from datetime import timedelta
+import json
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework.test import APITestCase
@@ -60,3 +61,45 @@ class ReminderApiTests(APITestCase):
         self.client.force_authenticate(user=None)
         response = self.client.post("/api/reminders/parse/", {"text": "Remind me tomorrow at 9 AM"}, format="json")
         self.assertIn(response.status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))
+
+    @patch("reminders.views.urlopen")
+    def test_ai_parse_returns_reviewable_draft_without_saving(self, mocked_urlopen):
+        mocked_response = MagicMock()
+        mocked_response.__enter__.return_value.read.return_value = json.dumps({
+            "choices": [{"message": {"content": json.dumps({
+                "title": "School pickup",
+                "description": "Pick up from the main gate",
+                "category": "Kids",
+                "remind_at": (timezone.now() + timedelta(days=1)).isoformat(),
+                "needs_clarification": False,
+                "clarification_question": "",
+            })}}],
+        }).encode("utf-8")
+        mocked_urlopen.return_value = mocked_response
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            response = self.client.post("/api/reminders/parse/", {"text": "Pick up kids tomorrow at 3 PM"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["requires_confirmation"])
+        self.assertEqual(response.data["draft"]["title"], "School pickup")
+        self.assertEqual(Reminder.objects.count(), 0)
+
+    @patch("reminders.views.urlopen")
+    def test_ai_parse_asks_for_missing_time(self, mocked_urlopen):
+        mocked_response = MagicMock()
+        mocked_response.__enter__.return_value.read.return_value = json.dumps({
+            "choices": [{"message": {"content": json.dumps({
+                "title": "Buy groceries",
+                "description": "",
+                "category": "Family",
+                "remind_at": None,
+                "needs_clarification": True,
+                "clarification_question": "What time should I remind you?",
+            })}}],
+        }).encode("utf-8")
+        mocked_urlopen.return_value = mocked_response
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            response = self.client.post("/api/reminders/parse/", {"text": "Buy groceries"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["needs_clarification"])
+        self.assertIn("time", response.data["question"])
+        self.assertEqual(Reminder.objects.count(), 0)
