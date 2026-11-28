@@ -80,6 +80,7 @@ export default function Home() {
       setToken(saved);
       loadDashboard(saved).catch(() => {
         window.localStorage.removeItem("moment_access");
+        window.localStorage.removeItem("moment_refresh");
         setToken("");
       });
     }
@@ -174,6 +175,7 @@ export default function Home() {
 
   function logout() {
     window.localStorage.removeItem("moment_access");
+    window.localStorage.removeItem("moment_refresh");
     setToken(""); setUser(null); setItems([]); setForm(emptyForm); setEditing(null);
   }
 
