@@ -104,7 +104,6 @@ export default function Home() {
       }, "");
       window.localStorage.setItem("moment_access", data.access);
       window.localStorage.setItem("moment_refresh", data.refresh);
-      window.localStorage.setItem("moment_refresh", data.refresh);
       setToken(data.access);
       await loadDashboard(data.access);
       setMessage(authMode === "register" ? "Your account is ready. Welcome!" : "Welcome back!");
