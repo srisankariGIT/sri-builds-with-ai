@@ -27,7 +27,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false);\n  const [aiText, setAiText] = useState("");\n  const [aiBusy, setAiBusy] = useState(false);\n  const [aiQuestion, setAiQuestion] = useState("");
 
   async function request(path, options = {}, authToken = token) {
     const response = await fetch(`${API}${path}`, {
@@ -87,6 +87,33 @@ export default function Home() {
       setMessage(authMode === "register" ? "Your account is ready. Welcome!" : "Welcome back!");
     } catch (err) { setError(err.message); }
     finally { setBusy(false); }
+  }
+
+  async function draftWithAI() {
+    if (!aiText.trim()) { setAiQuestion("Tell me what you want to remember."); return; }
+    setAiBusy(true); setError(""); setMessage(""); setAiQuestion("");
+    try {
+      const result = await request("/reminders/parse/", {
+        method: "POST",
+        body: JSON.stringify({ text: aiText }),
+      });
+      if (result.needs_clarification) {
+        setAiQuestion(result.question || "Please add a date and time, then try again.");
+      } else if (result.draft) {
+        setForm({
+          title: result.draft.title || "",
+          description: result.draft.description || "",
+          category: result.draft.category || "Personal",
+          remind_at: localDateTime(result.draft.remind_at),
+        });
+        setEditing(null);
+        setAiQuestion("Draft ready. Review the details below, then select Save reminder to confirm.");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAiBusy(false);
+    }
   }
 
   async function saveReminder(event) {
@@ -188,6 +215,13 @@ export default function Home() {
           </section>
           <div className="dashboard-grid">
             <section className="panel create-panel"><div className="panel-heading"><div><span className="eyebrow muted">{editing ? "MAKE A CHANGE" : "GET IT OUT OF YOUR HEAD"}</span><h3>{editing ? "Edit reminder" : "Create a reminder"}</h3></div><span className="sparkle">✧</span></div>
+              <div className="ai-draft-box">
+                <label htmlFor="ai-reminder-text">Describe it in your own words</label>
+                <textarea id="ai-reminder-text" rows="3" value={aiText} onChange={(e) => setAiText(e.target.value)} placeholder="For example: Remind me to take Amma to her appointment tomorrow at 10 AM" />
+                <button type="button" className="ai-draft-btn" onClick={draftWithAI} disabled={aiBusy || !aiText.trim()}>{aiBusy ? "Thinking..." : "✦ Create a draft with AI"}</button>
+                {aiQuestion && <p className="ai-hint" role="status">{aiQuestion}</p>}
+                <p className="ai-caption">AI prepares a draft only. You review and save it yourself.</p>
+              </div>
               <form onSubmit={saveReminder} className="stack-form">
                 <label>What do you need to remember?<input required maxLength="255" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Pick up the kids from school" /></label>
                 <label>A little more detail <textarea rows="2" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Add a note (optional)" /></label>
