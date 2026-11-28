@@ -52,6 +52,8 @@ export default function Home() {
     setItems(reminders);
   }
 
+  // The initial session restore intentionally runs once on mount.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const saved = window.localStorage.getItem("moment_access");
     if (saved) {
@@ -137,7 +139,7 @@ export default function Home() {
         <div className="aside-copy">
           <span className="eyebrow">A LITTLE MORE PEACE OF MIND</span>
           <h1>Remember what matters.<br /><em>Enjoy the moment.</em></h1>
-          <p>One thoughtful place for the family plans, little tasks and important moments you don't want to miss.</p>
+          <p>One thoughtful place for the family plans, little tasks and important moments you don&apos;t want to miss.</p>
           <div className="mini-note"><span>✦</span> Made for real life, and all the things it holds.</div>
         </div>
         <div className="aside-foot">YOUR FAMILY, THOUGHTFULLY ORGANISED</div>
